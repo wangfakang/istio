@@ -149,29 +149,31 @@
     ],
     "stats_matcher": {
       "inclusion_list": {
-        "patterns": [
-          {
-          "prefix": "reporter="
-          },
-          {
-          "prefix": "component"
-          },
-          {{- range $a, $s := .inclusionPrefix }}
-          {
-          "prefix": "{{$s}}"
-          },
-          {{- end }}
-          {{- range $a, $s := .inclusionSuffix }}
-          {
-          "suffix": "{{$s}}"
-          },
-          {{- end }}
-          {{- range $a, $s := .inclusionRegexps }}
-          {
-          "regex": "{{js $s}}"
-          },
-          {{- end }}
-        ]
+        "patterns": [{
+          "prefix": "cluster_manager"
+        },
+        {
+        "prefix": "reporter="
+        },
+        {
+        "prefix": "component"
+        },        
+        {
+          "prefix": "listener_manager"
+        },
+        {
+          "prefix": "http_mixer_filter"
+        },
+        {
+          "prefix": "tcp_mixer_filter"
+        },
+        {
+          "prefix": "server"
+        },
+        {
+          "prefix": "cluster.xds-grpc"
+        }
+      ]
       }
     }
   },

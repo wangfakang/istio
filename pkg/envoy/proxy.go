@@ -16,7 +16,7 @@ package envoy
 
 import (
 	"fmt"
-	"io/ioutil"
+	_ "io/ioutil"
 	"net"
 	"os"
 	"os/exec"
@@ -38,7 +38,11 @@ const (
 	epochFileTemplate = "envoy-rev%d.json"
 
 	// drainFile is the location of the bootstrap config used for draining on istio-proxy termination
-	drainFile = "/var/lib/istio/envoy/envoy_bootstrap_drain.json"
+	drainFile         = "/var/lib/istio/envoy/envoy_bootstrap_drain.json"
+	CmdStart          = "start"
+	ArgConfig         = "--config"
+	ArgServiceCluster = "--service-cluster"
+	ArgServiceNode    = "--service-node"
 )
 
 type envoy struct {
@@ -99,35 +103,44 @@ func (e *envoy) IsLive() bool {
 }
 
 func (e *envoy) args(fname string, epoch int, bootstrapConfig string) []string {
-	proxyLocalAddressType := "v4"
-	if isIPv6Proxy(e.NodeIPs) {
-		proxyLocalAddressType = "v6"
-	}
-	startupArgs := []string{"-c", fname,
-		"--restart-epoch", fmt.Sprint(epoch),
-		"--drain-time-s", fmt.Sprint(int(convertDuration(e.Config.DrainDuration) / time.Second)),
-		"--parent-shutdown-time-s", fmt.Sprint(int(convertDuration(e.Config.ParentShutdownDuration) / time.Second)),
-		"--service-cluster", e.Config.ServiceCluster,
-		"--service-node", e.Node,
-		"--max-obj-name-len", fmt.Sprint(e.Config.StatNameLength),
-		"--local-address-ip-version", proxyLocalAddressType,
-		"--log-format", fmt.Sprintf("[Envoy (Epoch %d)] ", epoch) + "[%Y-%m-%d %T.%e][%t][%l][%n] %v",
+	//proxyLocalAddressType := "v4"
+	//if isIPv6Proxy(e.NodeIPs) {
+	//	proxyLocalAddressType = "v6"
+	//}
+	// TODO MOSN need to be compatible with the following startup parameters.
+	//startupArgs := []string{"-c", fname,
+	//	"--restart-epoch", fmt.Sprint(epoch),
+	//	"--drain-time-s", fmt.Sprint(int(convertDuration(e.Config.DrainDuration) / time.Second)),
+	//	"--parent-shutdown-time-s", fmt.Sprint(int(convertDuration(e.Config.ParentShutdownDuration) / time.Second)),
+	//	"--service-cluster", e.Config.ServiceCluster,
+	//	"--service-node", e.Node,
+	//	"--max-obj-name-len", fmt.Sprint(e.Config.StatNameLength),
+	//	"--local-address-ip-version", proxyLocalAddressType,
+	//	"--log-format", fmt.Sprintf("[Envoy (Epoch %d)] ", epoch) + "[%Y-%m-%d %T.%e][%t][%l][%n] %v",
+	//}
+
+	//startupArgs = append(startupArgs, e.extraArgs...)
+
+	startupArgs := []string{CmdStart,
+		ArgConfig, fname,
+		ArgServiceCluster, e.Config.ServiceCluster,
+		ArgServiceNode, e.Node,
 	}
 
-	startupArgs = append(startupArgs, e.extraArgs...)
+	//TODO MOSN need to be support "--config-yaml" for override config.
+	// bootstrapConfig is depends on ISTIO_BOOTSTRAP_OVERRIDE env.
+	//if bootstrapConfig != "" {
+	//	bytes, err := ioutil.ReadFile(bootstrapConfig)
+	//	if err != nil {
+	//		log.Warnf("Failed to read bootstrap override %s, %v", bootstrapConfig, err)
+	//	} else {
+	//		startupArgs = append(startupArgs, "--config-yaml", string(bytes))
+	//	}
+	//}
 
-	if bootstrapConfig != "" {
-		bytes, err := ioutil.ReadFile(bootstrapConfig)
-		if err != nil {
-			log.Warnf("Failed to read bootstrap override %s, %v", bootstrapConfig, err)
-		} else {
-			startupArgs = append(startupArgs, "--config-yaml", string(bytes))
-		}
-	}
-
-	if e.Config.Concurrency > 0 {
-		startupArgs = append(startupArgs, "--concurrency", fmt.Sprint(e.Config.Concurrency))
-	}
+	//if e.Config.Concurrency > 0 {
+	//	startupArgs = append(startupArgs, "--concurrency", fmt.Sprint(e.Config.Concurrency))
+	//}
 
 	return startupArgs
 }

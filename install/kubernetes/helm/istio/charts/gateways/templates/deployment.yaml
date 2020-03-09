@@ -113,6 +113,8 @@ spec:
         {{- if $.Values.global.logging.level }}
           - --log_output_level={{ $.Values.global.logging.level }}
         {{- end}}
+          - --binaryPath
+          - {{ $.Values.global.sidcar.binaryPath }}
           - --drainDuration
           - '45s' #drainDuration
           - --parentShutdownDuration
