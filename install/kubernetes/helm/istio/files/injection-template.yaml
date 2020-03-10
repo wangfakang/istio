@@ -105,10 +105,10 @@ initContainers:
   {{ end }}
 containers:
 - name: istio-proxy
-{{- if contains "/" (annotation .ObjectMeta `sidecar.istio.io/proxyImage` .Values.global.proxy.image) }}
-  image: "{{ annotation .ObjectMeta `sidecar.istio.io/proxyImage` .Values.global.proxy.image }}"
+{{- if contains "/" (annotation .ObjectMeta `sidecar.istio.io/proxyImage` .Values.global.sidcar.image) }}
+  image: "{{ annotation .ObjectMeta `sidecar.istio.io/proxyImage` .Values.global.sidcar.image }}"
 {{- else }}
-  image: "{{ annotation .ObjectMeta `sidecar.istio.io/proxyImage` .Values.global.hub }}/{{ .Values.global.proxy.image }}:{{ .Values.global.tag }}"
+  image: "{{ annotation .ObjectMeta `sidecar.istio.io/proxyImage` .Values.global.hub }}/{{ .Values.global.sidcar.image }}:{{ .Values.global.tag }}"
 {{- end }}
   ports:
   - containerPort: 15090
@@ -312,13 +312,14 @@ containers:
   {{- end }}
   imagePullPolicy: {{ .Values.global.imagePullPolicy }}
   {{ if ne (annotation .ObjectMeta `status.sidecar.istio.io/port` (valueOrDefault .Values.global.proxy.statusPort 0 )) `0` }}
-  readinessProbe:
-    httpGet:
-      path: /healthz/ready
-      port: {{ annotation .ObjectMeta `status.sidecar.istio.io/port` .Values.global.proxy.statusPort }}
-    initialDelaySeconds: {{ annotation .ObjectMeta `readiness.status.sidecar.istio.io/initialDelaySeconds` .Values.global.proxy.readinessInitialDelaySeconds }}
-    periodSeconds: {{ annotation .ObjectMeta `readiness.status.sidecar.istio.io/periodSeconds` .Values.global.proxy.readinessPeriodSeconds }}
-    failureThreshold: {{ annotation .ObjectMeta `readiness.status.sidecar.istio.io/failureThreshold` .Values.global.proxy.readinessFailureThreshold }}
+  # TODO support probe, Now MOSN don't support server_info API. 
+  #readinessProbe:
+  #  httpGet:
+  #    path: /healthz/ready
+  #    port: {{ annotation .ObjectMeta `status.sidecar.istio.io/port` .Values.global.proxy.statusPort }}
+  #  initialDelaySeconds: {{ annotation .ObjectMeta `readiness.status.sidecar.istio.io/initialDelaySeconds` .Values.global.proxy.readinessInitialDelaySeconds }}
+  #  periodSeconds: {{ annotation .ObjectMeta `readiness.status.sidecar.istio.io/periodSeconds` .Values.global.proxy.readinessPeriodSeconds }}
+  #  failureThreshold: {{ annotation .ObjectMeta `readiness.status.sidecar.istio.io/failureThreshold` .Values.global.proxy.readinessFailureThreshold }}
   {{ end -}}
   securityContext:
     allowPrivilegeEscalation: {{ .Values.global.proxy.privileged }}
