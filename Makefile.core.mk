@@ -162,7 +162,7 @@ ifeq ($(PROXY_REPO_SHA),)
   export PROXY_REPO_SHA:=$(shell grep PROXY_REPO_SHA istio.deps  -A 4 | grep lastStableSHA | cut -f 4 -d '"')
 endif
 
-ifeq ($(SIDCAR), Envoy)
+ifeq ($(SIDECAR), Envoy)
   # Envoy binary variables Keep the default URLs up-to-date with the latest push from istio/proxy.
   
   export ISTIO_ENVOY_BASE_URL ?= https://storage.googleapis.com/istio-build/proxy
@@ -211,7 +211,7 @@ ifeq ($(SIDCAR), Envoy)
 endif
 
 
-ifeq ($(SIDCAR), MOSN)
+ifeq ($(SIDECAR), MOSN)
   # Defines the base URL to download mosn from
   export ISTIO_MOSN_BASE_URL ?= https://github.com/mosn/mosn/releases/download/
 

@@ -87,32 +87,32 @@ docker.sidecar_injector:$(ISTIO_DOCKER)/sidecar-injector
 # BUILD_PRE tells $(DOCKER_RULE) to run the command specified before executing a docker build
 # BUILD_ARGS tells  $(DOCKER_RULE) to execute a docker build with the specified commands
 
-#TODO support set sidcar dynamicly
-# The file must be named '$SIDCAR_BINARY_NAME', depends on the release.
+#TODO support set sidecar dynamicly
+# The file must be named '$SIDECAR_BINARY_NAME', depends on the release.
 
-ifeq ($(SIDCAR), MOSN)
-    export SIDCAR_BINARY_NAME = mosn
+ifeq ($(SIDECAR), MOSN)
+    export SIDECAR_BINARY_NAME = mosn
 endif
 
-ifeq ($(SIDCAR), Envoy)
-    export SIDCAR_BINARY_NAME = envoy
+ifeq ($(SIDECAR), Envoy)
+    export SIDECAR_BINARY_NAME = envoy
 endif
 
-${ISTIO_MOSN_LINUX_RELEASE_DIR}/${SIDCAR_BINARY_NAME}: ${ISTIO_MOSN_LINUX_RELEASE_PATH}
+${ISTIO_MOSN_LINUX_RELEASE_DIR}/${SIDECAR_BINARY_NAME}: ${ISTIO_MOSN_LINUX_RELEASE_PATH}
 	mkdir -p $(DOCKER_BUILD_TOP)/proxyv2
 ifdef DEBUG_IMAGE
-	cp ${ISTIO_MOSN_LINUX_DEBUG_PATH} ${ISTIO_MOSN_LINUX_RELEASE_DIR}/${SIDCAR_BINARY_NAME}
+	cp ${ISTIO_MOSN_LINUX_DEBUG_PATH} ${ISTIO_MOSN_LINUX_RELEASE_DIR}/${SIDECAR_BINARY_NAME}
 else
-	cp ${ISTIO_MOSN_LINUX_RELEASE_PATH} ${ISTIO_MOSN_LINUX_RELEASE_DIR}/${SIDCAR_BINARY_NAME}
+	cp ${ISTIO_MOSN_LINUX_RELEASE_PATH} ${ISTIO_MOSN_LINUX_RELEASE_DIR}/${SIDECAR_BINARY_NAME}
 endif
 
 # Default proxy image.
-docker.proxyv2: BUILD_PRE=chmod 755 ${SIDCAR_BINARY_NAME} pilot-agent istio-iptables istio-iptables.sh &&
+docker.proxyv2: BUILD_PRE=chmod 755 ${SIDECAR_BINARY_NAME} pilot-agent istio-iptables istio-iptables.sh &&
 docker.proxyv2: BUILD_ARGS=--build-arg proxy_version=istio-proxy:${PROXY_REPO_SHA} --build-arg istio_version=${VERSION} --build-arg BASE_VERSION=${BASE_VERSION}
 docker.proxyv2: tools/packaging/common/envoy_bootstrap_v2.json
 docker.proxyv2: tools/packaging/common/envoy_bootstrap_drain.json
 docker.proxyv2: install/gcp/bootstrap/gcp_envoy_bootstrap.json
-docker.proxyv2: $(ISTIO_MOSN_LINUX_RELEASE_DIR)/${SIDCAR_BINARY_NAME}
+docker.proxyv2: $(ISTIO_MOSN_LINUX_RELEASE_DIR)/${SIDECAR_BINARY_NAME}
 docker.proxyv2: $(ISTIO_OUT_LINUX)/pilot-agent
 docker.proxyv2: pilot/docker/Dockerfile.proxyv2
 docker.proxyv2: pilot/docker/envoy_pilot.yaml.tmpl
@@ -127,7 +127,7 @@ docker.proxytproxy: BUILD_ARGS=--build-arg proxy_version=istio-proxy:${PROXY_REP
 docker.proxytproxy: tools/packaging/common/envoy_bootstrap_v2.json
 docker.proxytproxy: tools/packaging/common/envoy_bootstrap_drain.json
 docker.proxytproxy: install/gcp/bootstrap/gcp_envoy_bootstrap.json
-docker.proxytproxy: $(ISTIO_MOSN_LINUX_RELEASE_DIR)/${SIDCAR_BINARY_NAME}
+docker.proxytproxy: $(ISTIO_MOSN_LINUX_RELEASE_DIR)/${SIDECAR_BINARY_NAME}
 docker.proxytproxy: $(ISTIO_OUT_LINUX)/pilot-agent
 docker.proxytproxy: pilot/docker/Dockerfile.proxytproxy
 docker.proxytproxy: pilot/docker/envoy_pilot.yaml.tmpl
@@ -162,7 +162,7 @@ docker.app_sidecar: tools/packaging/common/istio-node-agent-start.sh
 docker.app_sidecar: tools/packaging/deb/postinst.sh
 docker.app_sidecar: pkg/test/echo/docker/echo-start.sh
 docker.app_sidecar: $(ISTIO_DOCKER)/certs
-docker.app_sidecar: $(ISTIO_MOSN_LINUX_RELEASE_DIR)/${SIDCAR_BINARY_NAME}
+docker.app_sidecar: $(ISTIO_MOSN_LINUX_RELEASE_DIR)/${SIDECAR_BINARY_NAME}
 docker.app_sidecar: $(ISTIO_OUT_LINUX)/pilot-agent
 docker.app_sidecar: $(ISTIO_OUT_LINUX)/node_agent
 docker.app_sidecar: $(ISTIO_OUT_LINUX)/client

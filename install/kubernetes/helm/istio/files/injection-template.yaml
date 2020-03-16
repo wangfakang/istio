@@ -105,10 +105,10 @@ initContainers:
   {{ end }}
 containers:
 - name: istio-proxy
-{{- if contains "/" (annotation .ObjectMeta `sidecar.istio.io/proxyImage` .Values.global.sidcar.image) }}
-  image: "{{ annotation .ObjectMeta `sidecar.istio.io/proxyImage` .Values.global.sidcar.image }}"
+{{- if contains "/" (annotation .ObjectMeta `sidecar.istio.io/proxyImage` .Values.global.sidecar.image) }}
+  image: "{{ annotation .ObjectMeta `sidecar.istio.io/proxyImage` .Values.global.sidecar.image }}"
 {{- else }}
-  image: "{{ annotation .ObjectMeta `sidecar.istio.io/proxyImage` .Values.global.hub }}/{{ .Values.global.sidcar.image }}:{{ .Values.global.tag }}"
+  image: "{{ annotation .ObjectMeta `sidecar.istio.io/proxyImage` .Values.global.hub }}/{{ .Values.global.sidecar.image }}:{{ .Values.global.tag }}"
 {{- end }}
   ports:
   - containerPort: 15090

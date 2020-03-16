@@ -114,10 +114,10 @@ global:
   # Default tag for Istio images.
   tag: 1.4-dev
   
-  # Default sidcar configration
-  # binaryPath is sidcar binary path
-  # image is sidcar and pilot-agent image, by make docker.proxyv2 .
-  sidcar:
+  # Default sidecar configration
+  # binaryPath is sidecar binary path
+  # image is sidecar and pilot-agent image, by make docker.proxyv2 .
+  sidecar:
     binaryPath: /usr/local/bin/mosn
     image: proxyv2
 

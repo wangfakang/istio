@@ -46,7 +46,7 @@ ARG istio_version
 #COPY envoy /usr/local/bin/envoy
 
 # Install MOSN.
-# TODO dynamic set sidcar in Makefile
+# TODO dynamic set sidecar in Makefile
 COPY mosn /usr/local/bin/mosn
 
 # Environment variable indicating the exact proxy sha - for debugging or version-specific configs 

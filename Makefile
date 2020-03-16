@@ -23,9 +23,9 @@
 -include Makefile.overrides.mk
 
 
-# Dynamic set sidcar
-# Now it support Envoy and MOSN, if set SIDCAR = MOSN, MOSN will be used as the proxy in Istio.
-export SIDCAR = MOSN
+# Dynamic set sidecar
+# Now it support Envoy and MOSN, if set SIDECAR = MOSN, MOSN will be used as the proxy in Istio.
+export SIDECAR = MOSN
 export ISTIO_MOSN_VERSION = 0.9.0
 
 # Set the environment variable BUILD_WITH_CONTAINER to use a container

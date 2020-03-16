@@ -90,7 +90,7 @@ function download_envoy_if_necessary () {
     mkdir -p "$(dirname "$2")"
     pushd "$(dirname "$2")"
 
-    if [ $SIDCAR = "Envoy" ] ; then     
+    if [ $SIDECAR = "Envoy" ] ; then     
       # Download and extract the binary to the output directory.
       echo "Downloading Envoy: ${DOWNLOAD_COMMAND} $1 to $2"
       time ${DOWNLOAD_COMMAND} --header "${AUTH_HEADER:-}" "$1" | tar xz
@@ -106,7 +106,7 @@ function download_envoy_if_necessary () {
       cp -f "$2" "$(dirname "$2")/envoy"
     fi  
 
-    if [ $SIDCAR = "MOSN" ] ; then     
+    if [ $SIDECAR = "MOSN" ] ; then     
       # Download and extract the binary to the output directory.
       echo "Downloading MOSN: ${DOWNLOAD_COMMAND} $1 to $2"
       time ${DOWNLOAD_COMMAND} --header "${AUTH_HEADER:-}" "$1" > mosn
@@ -134,7 +134,7 @@ if [[ -z "${PROXY_REPO_SHA:-}" ]] ; then
   export PROXY_REPO_SHA
 fi
 
-if [ $SIDCAR = "Envoy" ] ; then 
+if [ $SIDECAR = "Envoy" ] ; then 
   # Defines the base URL to download envoy from
   ISTIO_ENVOY_BASE_URL=${ISTIO_ENVOY_BASE_URL:-https://storage.googleapis.com/istio-build/proxy}
   
@@ -196,7 +196,7 @@ if [ $SIDCAR = "Envoy" ] ; then
 fi
 
 
-if [ $SIDCAR = "MOSN" ] ; then 
+if [ $SIDECAR = "MOSN" ] ; then 
   # Defines the base URL to download mosn from
   ISTIO_MOSN_BASE_URL=${ISTIO_MOSN_BASE_URL:-https://github.com/mosn/mosn/releases/download/}
   
@@ -238,24 +238,24 @@ set_download_command
 
 
 # Download and extract the Envoy linux debug binary.
-#download_envoy_if_necessary "${ISTIO_SIDCAR_LINUX_DEBUG_URL}" "$ISTIO_SIDCAR_LINUX_DEBUG_PATH"
-download_envoy_if_necessary `eval echo '$ISTIO_'"${SIDCAR}"'_LINUX_DEBUG_URL'` `eval echo '$ISTIO_'"${SIDCAR}"'_LINUX_DEBUG_PATH'`
+#download_envoy_if_necessary "${ISTIO_SIDECAR_LINUX_DEBUG_URL}" "$ISTIO_SIDECAR_LINUX_DEBUG_PATH"
+download_envoy_if_necessary `eval echo '$ISTIO_'"${SIDECAR}"'_LINUX_DEBUG_URL'` `eval echo '$ISTIO_'"${SIDECAR}"'_LINUX_DEBUG_PATH'`
 
 # Download and extract the Envoy linux release binary.
-download_envoy_if_necessary `eval echo '$ISTIO_'"${SIDCAR}"'_LINUX_RELEASE_URL'` `eval echo '$ISTIO_'"${SIDCAR}"'_LINUX_RELEASE_PATH'`
+download_envoy_if_necessary `eval echo '$ISTIO_'"${SIDECAR}"'_LINUX_RELEASE_URL'` `eval echo '$ISTIO_'"${SIDECAR}"'_LINUX_RELEASE_PATH'`
 
 if [[ "$LOCAL_OS" == "Darwin" ]]; then
   # Download and extract the Envoy macOS release binary
-  download_envoy_if_necessary `eval echo '$ISTIO_'"${SIDCAR}"'_MACOS_RELEASE_URL'` `eval echo '$ISTIO_'"${SIDCAR}"'_MACOS_RELEASE_PATH'`
-  ISTIO_SIDCAR_NATIVE_PATH=`eval echo '$ISTIO_'"${SIDCAR}"'_MACOS_RELEASE_PATH'`
+  download_envoy_if_necessary `eval echo '$ISTIO_'"${SIDECAR}"'_MACOS_RELEASE_URL'` `eval echo '$ISTIO_'"${SIDECAR}"'_MACOS_RELEASE_PATH'`
+  ISTIO_SIDECAR_NATIVE_PATH=`eval echo '$ISTIO_'"${SIDECAR}"'_MACOS_RELEASE_PATH'`
 else
-  ISTIO_SIDCAR_NATIVE_PATH=`eval echo '$ISTIO_'"${SIDCAR}"'_LINUX_DEBUG_PATH'`
+  ISTIO_SIDECAR_NATIVE_PATH=`eval echo '$ISTIO_'"${SIDECAR}"'_LINUX_DEBUG_PATH'`
 fi
 
-if [ $SIDCAR = "Envoy" ] ; then 
+if [ $SIDECAR = "Envoy" ] ; then 
   # Copy native envoy binary to ISTIO_OUT
-  echo "Copying ${ISTIO_SIDCAR_NATIVE_PATH} to ${ISTIO_OUT}/envoy"
-  cp -f "${ISTIO_SIDCAR_NATIVE_PATH}" "${ISTIO_OUT}/envoy"
+  echo "Copying ${ISTIO_SIDECAR_NATIVE_PATH} to ${ISTIO_OUT}/envoy"
+  cp -f "${ISTIO_SIDECAR_NATIVE_PATH}" "${ISTIO_OUT}/envoy"
   
   # TODO(nmittler): Remove once tests no longer use the envoy binary directly.
   # circleCI expects this in the bin directory
@@ -264,10 +264,10 @@ if [ $SIDCAR = "Envoy" ] ; then
   cp -f "${ISTIO_OUT}/envoy" "${ISTIO_BIN}/envoy"
 fi
 
-if [ $SIDCAR = "MOSN" ] ; then 
+if [ $SIDECAR = "MOSN" ] ; then 
   # Copy native mosn binary to ISTIO_OUT
-  echo "Copying ${ISTIO_SIDCAR_NATIVE_PATH} to ${ISTIO_OUT}/mosn"
-  cp -f "${ISTIO_SIDCAR_NATIVE_PATH}" "${ISTIO_OUT}/mosn"
+  echo "Copying ${ISTIO_SIDECAR_NATIVE_PATH} to ${ISTIO_OUT}/mosn"
+  cp -f "${ISTIO_SIDECAR_NATIVE_PATH}" "${ISTIO_OUT}/mosn"
   
   # TODO(nmittler): Remove once tests no longer use the envoy binary directly.
   # circleCI expects this in the bin directory

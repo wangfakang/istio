@@ -86,10 +86,10 @@ spec:
 {{- end }}
 {{- end }}
         - name: istio-proxy
-{{- if contains "/" $.Values.global.sidcar.image }}
-          image: "{{ $.Values.global.sidcar.image }}"
+{{- if contains "/" $.Values.global.sidecar.image }}
+          image: "{{ $.Values.global.sidecar.image }}"
 {{- else }}
-          image: "{{ $.Values.global.hub }}/{{ $.Values.global.sidcar.image }}:{{ $.Values.global.tag }}"
+          image: "{{ $.Values.global.hub }}/{{ $.Values.global.sidecar.image }}:{{ $.Values.global.tag }}"
 {{- end }}
           imagePullPolicy: {{ $.Values.global.imagePullPolicy }}
           ports:
@@ -114,7 +114,7 @@ spec:
           - --log_output_level={{ $.Values.global.logging.level }}
         {{- end}}
           - --binaryPath
-          - {{ $.Values.global.sidcar.binaryPath }}
+          - {{ $.Values.global.sidecar.binaryPath }}
           - --drainDuration
           - '45s' #drainDuration
           - --parentShutdownDuration
