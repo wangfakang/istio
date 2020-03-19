@@ -120,6 +120,8 @@ template: |
     - sidecar
     - --domain
     - $(POD_NAMESPACE).svc.{{ .Values.global.proxy.clusterDomain }}
+    - --binaryPath
+    - {{ $.Values.global.sidecar.binaryPath }}
     - --serviceCluster
     {{ if ne "" (index .ObjectMeta.Labels "app") -}}
     - "{{ index .ObjectMeta.Labels `app` }}.$(POD_NAMESPACE)"

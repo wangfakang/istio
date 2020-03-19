@@ -101,6 +101,8 @@ spec:
         {{- if .Values.global.logAsJson }}
           - --log_as_json
         {{- end }}
+          - --binaryPath
+          - {{ $.Values.global.sidecar.binaryPath }}
           - --drainDuration
           - '45s' #drainDuration
           - --parentShutdownDuration

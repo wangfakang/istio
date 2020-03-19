@@ -169,6 +169,8 @@ spec:
         - proxy
         - --domain
         - $(POD_NAMESPACE).svc.{{ .Values.global.proxy.clusterDomain }}
+        - --binaryPath
+        - {{ $.Values.global.sidecar.binaryPath }}
         - --serviceCluster
         - istio-telemetry
         - --templateFile
