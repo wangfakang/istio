@@ -74,22 +74,42 @@ function download_envoy_if_necessary () {
     mkdir -p "$(dirname "$2")"
     pushd "$(dirname "$2")"
 
-    # Download and extract the binary to the output directory.
-    echo "Downloading Envoy: ${DOWNLOAD_COMMAND} $1 to $2"
-    time ${DOWNLOAD_COMMAND} --header "${AUTH_HEADER:-}" "$1" | tar xz
+    if [ $SIDECAR = "Envoy" ] ; then
+      # Download and extract the binary to the output directory.
+      echo "Downloading Envoy: ${DOWNLOAD_COMMAND} $1 to $2"
+      time ${DOWNLOAD_COMMAND} --header "${AUTH_HEADER:-}" "$1" | tar xz
 
-    # Copy the extracted binary to the output location
-    cp usr/local/bin/envoy "$2"
+      # Copy the extracted binary to the output location
+      cp usr/local/bin/envoy "$2"
 
-    # Remove the extracted binary.
-    rm -rf usr
+      # Remove the extracted binary.
+      rm -rf usr
 
-    # Make a copy named just "envoy" in the same directory (overwrite if necessary).
-    echo "Copying $2 to $(dirname "$2")/envoy"
-    cp -f "$2" "$(dirname "$2")/envoy"
+      # Make a copy named just "envoy" in the same directory (overwrite if necessary).
+      echo "Copying $2 to $(dirname "$2")/envoy"
+      cp -f "$2" "$(dirname "$2")/envoy"
+    fi
+        
+    if [ $SIDECAR = "MOSN" ] ; then
+      # Download and extract the binary to the output directory.
+      echo "Downloading MOSN: ${DOWNLOAD_COMMAND} $1 to $2"
+      time ${DOWNLOAD_COMMAND} --header "${AUTH_HEADER:-}" "$1" > mosn
+
+      # Copy the extracted binary to the output location
+      cp mosn "$2"
+
+      # Remove the extracted binary.
+      rm -rf mosn
+
+      # Make a copy named just "mosn" in the same directory (overwrite if necessary).
+      echo "Copying $2 to $(dirname "$2")/mosn"
+    fi
+                
     popd
   fi
 }
+
+
 
 # Downloads WebAssembly based plugin if it doesn't already exist.
 # Params:
@@ -128,100 +148,155 @@ if [[ -z "${PROXY_REPO_SHA:-}" ]] ; then
   export PROXY_REPO_SHA
 fi
 
-# Defines the base URL to download envoy from
-ISTIO_ENVOY_BASE_URL=${ISTIO_ENVOY_BASE_URL:-https://storage.googleapis.com/istio-build/proxy}
 
-# These variables are normally set by the Makefile.
-# OS-neutral vars. These currently only work for linux.
-ISTIO_ENVOY_VERSION=${ISTIO_ENVOY_VERSION:-${PROXY_REPO_SHA}}
-ISTIO_ENVOY_DEBUG_URL=${ISTIO_ENVOY_DEBUG_URL:-${ISTIO_ENVOY_BASE_URL}/envoy-debug-${ISTIO_ENVOY_LINUX_VERSION}.tar.gz}
-ISTIO_ENVOY_RELEASE_URL=${ISTIO_ENVOY_RELEASE_URL:-${ISTIO_ENVOY_BASE_URL}/envoy-alpha-${ISTIO_ENVOY_LINUX_VERSION}.tar.gz}
+if [ $SIDECAR = "Envoy" ] ; then
+  # Defines the base URL to download envoy from
+  ISTIO_ENVOY_BASE_URL=${ISTIO_ENVOY_BASE_URL:-https://storage.googleapis.com/istio-build/proxy}
 
-# Envoy Linux vars. Normally set by the Makefile.
-ISTIO_ENVOY_LINUX_VERSION=${ISTIO_ENVOY_LINUX_VERSION:-${ISTIO_ENVOY_VERSION}}
-ISTIO_ENVOY_LINUX_DEBUG_URL=${ISTIO_ENVOY_LINUX_DEBUG_URL:-${ISTIO_ENVOY_DEBUG_URL}}
-ISTIO_ENVOY_LINUX_RELEASE_URL=${ISTIO_ENVOY_LINUX_RELEASE_URL:-${ISTIO_ENVOY_RELEASE_URL}}
-# Variables for the extracted debug/release Envoy artifacts.
-ISTIO_ENVOY_LINUX_DEBUG_DIR=${ISTIO_ENVOY_LINUX_DEBUG_DIR:-"${OUT_DIR}/linux_amd64/debug"}
-ISTIO_ENVOY_LINUX_DEBUG_NAME=${ISTIO_ENVOY_LINUX_DEBUG_NAME:-"envoy-debug-${ISTIO_ENVOY_LINUX_VERSION}"}
-ISTIO_ENVOY_LINUX_DEBUG_PATH=${ISTIO_ENVOY_LINUX_DEBUG_PATH:-"${ISTIO_ENVOY_LINUX_DEBUG_DIR}/${ISTIO_ENVOY_LINUX_DEBUG_NAME}"}
-ISTIO_ENVOY_LINUX_RELEASE_DIR=${ISTIO_ENVOY_LINUX_RELEASE_DIR:-"${OUT_DIR}/linux_amd64/release"}
-ISTIO_ENVOY_LINUX_RELEASE_NAME=${ISTIO_ENVOY_LINUX_RELEASE_NAME:-"envoy-${ISTIO_ENVOY_LINUX_VERSION}"}
-ISTIO_ENVOY_LINUX_RELEASE_PATH=${ISTIO_ENVOY_LINUX_RELEASE_PATH:-"${ISTIO_ENVOY_LINUX_RELEASE_DIR}/${ISTIO_ENVOY_LINUX_RELEASE_NAME}"}
+  # These variables are normally set by the Makefile.
+  # OS-neutral vars. These currently only work for linux.
+  ISTIO_ENVOY_VERSION=${ISTIO_ENVOY_VERSION:-${PROXY_REPO_SHA}}
+  ISTIO_ENVOY_DEBUG_URL=${ISTIO_ENVOY_DEBUG_URL:-${ISTIO_ENVOY_BASE_URL}/envoy-debug-${ISTIO_ENVOY_LINUX_VERSION}.tar.gz}
+  ISTIO_ENVOY_RELEASE_URL=${ISTIO_ENVOY_RELEASE_URL:-${ISTIO_ENVOY_BASE_URL}/envoy-alpha-${ISTIO_ENVOY_LINUX_VERSION}.tar.gz}
 
-# Envoy macOS vars. Normally set by the makefile.
-# TODO Change url when official envoy release for macOS is available
-ISTIO_ENVOY_MACOS_VERSION=${ISTIO_ENVOY_MACOS_VERSION:-1.0.2}
-ISTIO_ENVOY_MACOS_RELEASE_URL=${ISTIO_ENVOY_MACOS_RELEASE_URL:-https://github.com/istio/proxy/releases/download/${ISTIO_ENVOY_MACOS_VERSION}/istio-proxy-${ISTIO_ENVOY_MACOS_VERSION}-macos.tar.gz}
-# Variables for the extracted debug/release Envoy artifacts.
-ISTIO_ENVOY_MACOS_RELEASE_DIR=${ISTIO_ENVOY_MACOS_RELEASE_DIR:-"${OUT_DIR}/darwin_amd64/release"}
-ISTIO_ENVOY_MACOS_RELEASE_NAME=${ISTIO_ENVOY_MACOS_RELEASE_NAME:-"envoy-${ISTIO_ENVOY_MACOS_VERSION}"}
-ISTIO_ENVOY_MACOS_RELEASE_PATH=${ISTIO_ENVOY_MACOS_RELEASE_PATH:-"${ISTIO_ENVOY_MACOS_RELEASE_DIR}/${ISTIO_ENVOY_MACOS_RELEASE_NAME}"}
+  # Envoy Linux vars. Normally set by the Makefile.
+  ISTIO_ENVOY_LINUX_VERSION=${ISTIO_ENVOY_LINUX_VERSION:-${ISTIO_ENVOY_VERSION}}
+  ISTIO_ENVOY_LINUX_DEBUG_URL=${ISTIO_ENVOY_LINUX_DEBUG_URL:-${ISTIO_ENVOY_DEBUG_URL}}
+  ISTIO_ENVOY_LINUX_RELEASE_URL=${ISTIO_ENVOY_LINUX_RELEASE_URL:-${ISTIO_ENVOY_RELEASE_URL}}
+  # Variables for the extracted debug/release Envoy artifacts.
+  ISTIO_ENVOY_LINUX_DEBUG_DIR=${ISTIO_ENVOY_LINUX_DEBUG_DIR:-"${OUT_DIR}/linux_amd64/debug"}
+  ISTIO_ENVOY_LINUX_DEBUG_NAME=${ISTIO_ENVOY_LINUX_DEBUG_NAME:-"envoy-debug-${ISTIO_ENVOY_LINUX_VERSION}"}
+  ISTIO_ENVOY_LINUX_DEBUG_PATH=${ISTIO_ENVOY_LINUX_DEBUG_PATH:-"${ISTIO_ENVOY_LINUX_DEBUG_DIR}/${ISTIO_ENVOY_LINUX_DEBUG_NAME}"}
+  ISTIO_ENVOY_LINUX_RELEASE_DIR=${ISTIO_ENVOY_LINUX_RELEASE_DIR:-"${OUT_DIR}/linux_amd64/release"}
+  ISTIO_ENVOY_LINUX_RELEASE_NAME=${ISTIO_ENVOY_LINUX_RELEASE_NAME:-"envoy-${ISTIO_ENVOY_LINUX_VERSION}"}
+  ISTIO_ENVOY_LINUX_RELEASE_PATH=${ISTIO_ENVOY_LINUX_RELEASE_PATH:-"${ISTIO_ENVOY_LINUX_RELEASE_DIR}/${ISTIO_ENVOY_LINUX_RELEASE_NAME}"}
 
-# Allow override with a local build of Envoy
-USE_LOCAL_PROXY=${USE_LOCAL_PROXY:-0}
-if [[ ${USE_LOCAL_PROXY} == 1 ]] ; then
-  ISTIO_ENVOY_LOCAL_PATH=${ISTIO_ENVOY_LOCAL_PATH:-$(realpath "${ISTIO_GO}/../proxy/bazel-bin/src/envoy/envoy")}
-  echo "Using istio-proxy image from local workspace: ${ISTIO_ENVOY_LOCAL_PATH}"
-  if [[ ! -f "${ISTIO_ENVOY_LOCAL_PATH}" ]]; then
-    echo "Error: missing istio-proxy from local workspace: ${ISTIO_ENVOY_LOCAL_PATH}. Check your build path."
-    exit 1
-  fi
+  # Envoy macOS vars. Normally set by the makefile.
+  # TODO Change url when official envoy release for macOS is available
+  ISTIO_ENVOY_MACOS_VERSION=${ISTIO_ENVOY_MACOS_VERSION:-1.0.2}
+  ISTIO_ENVOY_MACOS_RELEASE_URL=${ISTIO_ENVOY_MACOS_RELEASE_URL:-https://github.com/istio/proxy/releases/download/${ISTIO_ENVOY_MACOS_VERSION}/istio-proxy-${ISTIO_ENVOY_MACOS_VERSION}-macos.tar.gz}
+  # Variables for the extracted debug/release Envoy artifacts.
+  ISTIO_ENVOY_MACOS_RELEASE_DIR=${ISTIO_ENVOY_MACOS_RELEASE_DIR:-"${OUT_DIR}/darwin_amd64/release"}
+  ISTIO_ENVOY_MACOS_RELEASE_NAME=${ISTIO_ENVOY_MACOS_RELEASE_NAME:-"envoy-${ISTIO_ENVOY_MACOS_VERSION}"}
+  ISTIO_ENVOY_MACOS_RELEASE_PATH=${ISTIO_ENVOY_MACOS_RELEASE_PATH:-"${ISTIO_ENVOY_MACOS_RELEASE_DIR}/${ISTIO_ENVOY_MACOS_RELEASE_NAME}"}
 
-  # Point the native paths to the local envoy build.
-  if [[ "$GOOS_LOCAL" == "darwin" ]]; then
-    ISTIO_ENVOY_MACOS_RELEASE_PATH=${ISTIO_ENVOY_LOCAL_PATH}
-
-    ISTIO_ENVOY_LINUX_LOCAL_PATH=${ISTIO_ENVOY_LINUX_LOCAL_PATH:-}
-    if [[ -f "${ISTIO_ENVOY_LINUX_LOCAL_PATH}" ]] ; then
-      ISTIO_ENVOY_LINUX_DEBUG_PATH=${ISTIO_ENVOY_LINUX_LOCAL_PATH}
-      ISTIO_ENVOY_LINUX_RELEASE_PATH=${ISTIO_ENVOY_LINUX_LOCAL_PATH}
-    else
-      echo "Warning: The specified local macOS Envoy will not be included by Docker images. Set ISTIO_ENVOY_LINUX_LOCAL_PATH to specify a custom Linux build."
+  # Allow override with a local build of Envoy
+  USE_LOCAL_PROXY=${USE_LOCAL_PROXY:-0}
+  if [[ ${USE_LOCAL_PROXY} == 1 ]] ; then
+    ISTIO_ENVOY_LOCAL_PATH=${ISTIO_ENVOY_LOCAL_PATH:-$(realpath "${ISTIO_GO}/../proxy/bazel-bin/src/envoy/envoy")}
+    echo "Using istio-proxy image from local workspace: ${ISTIO_ENVOY_LOCAL_PATH}"
+    if [[ ! -f "${ISTIO_ENVOY_LOCAL_PATH}" ]]; then
+      echo "Error: missing istio-proxy from local workspace: ${ISTIO_ENVOY_LOCAL_PATH}. Check your build path."
+      exit 1
     fi
-  else
-    ISTIO_ENVOY_LINUX_DEBUG_PATH=${ISTIO_ENVOY_LOCAL_PATH}
-    ISTIO_ENVOY_LINUX_RELEASE_PATH=${ISTIO_ENVOY_LOCAL_PATH}
+
+    # Point the native paths to the local envoy build.
+    if [[ "$LOCAL_OS" == "Darwin" ]]; then
+      ISTIO_ENVOY_MACOS_RELEASE_PATH=${ISTIO_ENVOY_LOCAL_PATH}
+
+      ISTIO_ENVOY_LINUX_LOCAL_PATH=${ISTIO_ENVOY_LINUX_LOCAL_PATH:-}
+      if [[ -f "${ISTIO_ENVOY_LINUX_LOCAL_PATH}" ]] ; then
+        ISTIO_ENVOY_LINUX_DEBUG_PATH=${ISTIO_ENVOY_LINUX_LOCAL_PATH}
+        ISTIO_ENVOY_LINUX_RELEASE_PATH=${ISTIO_ENVOY_LINUX_LOCAL_PATH}
+      else
+        echo "Warning: The specified local macOS Envoy will not be included by Docker images. Set ISTIO_ENVOY_LINUX_LOCAL_PATH to specify a custom Linux build."
+      fi
+    else
+      ISTIO_ENVOY_LINUX_DEBUG_PATH=${ISTIO_ENVOY_LOCAL_PATH}
+      ISTIO_ENVOY_LINUX_RELEASE_PATH=${ISTIO_ENVOY_LOCAL_PATH}
+    fi
   fi
 fi
+
+if [ $SIDECAR = "MOSN" ] ; then 
+  # Defines the base URL to download mosn from
+  ISTIO_MOSN_BASE_URL=${ISTIO_MOSN_BASE_URL:-https://github.com/mosn/mosn/releases/download/}
+  
+  # These variables are normally set by the Makefile.
+  # OS-neutral vars. These currently only work for linux.
+  ISTIO_MOSN_VERSION=${ISTIO_MOSN_VERSION:-${PROXY_REPO_SHA}}
+  ISTIO_MOSN_DEBUG_URL=${ISTIO_MOSN_DEBUG_URL:-${ISTIO_MOSN_BASE_URL}/${ISTIO_MOSN_VERSION}/mosn}
+  ISTIO_MOSN_RELEASE_URL=${ISTIO_MOSN_RELEASE_URL:-${ISTIO_MOSN_BASE_URL}/${ISTIO_MOSN_VERSION}/mosn}
+  
+  # MOSN Linux vars. Normally set by the Makefile.
+  ISTIO_MOSN_LINUX_VERSION=${ISTIO_MOSN_LINUX_VERSION:-${ISTIO_MOSN_VERSION}}
+  ISTIO_MOSN_LINUX_DEBUG_URL=${ISTIO_MOSN_LINUX_DEBUG_URL:-${ISTIO_MOSN_DEBUG_URL}}
+  ISTIO_MOSN_LINUX_RELEASE_URL=${ISTIO_MOSN_LINUX_RELEASE_URL:-${ISTIO_MOSN_RELEASE_URL}}
+  # Variables for the extracted debug/release MOSN artifacts.
+  ISTIO_MOSN_LINUX_DEBUG_DIR=${ISTIO_MOSN_LINUX_DEBUG_DIR:-"${OUT_DIR}/linux_amd64/debug"}
+  ISTIO_MOSN_LINUX_DEBUG_NAME=${ISTIO_MOSN_LINUX_DEBUG_NAME:-"mosn-debug-${ISTIO_MOSN_LINUX_VERSION}"}
+  ISTIO_MOSN_LINUX_DEBUG_PATH=${ISTIO_MOSN_LINUX_DEBUG_PATH:-"${ISTIO_MOSN_LINUX_DEBUG_DIR}/${ISTIO_MOSN_LINUX_DEBUG_NAME}"}
+  ISTIO_MOSN_LINUX_RELEASE_DIR=${ISTIO_MOSN_LINUX_RELEASE_DIR:-"${OUT_DIR}/linux_amd64/release"}
+  ISTIO_MOSN_LINUX_RELEASE_NAME=${ISTIO_MOSN_LINUX_RELEASE_NAME:-"mosn-${ISTIO_MOSN_LINUX_VERSION}"}
+  ISTIO_MOSN_LINUX_RELEASE_PATH=${ISTIO_MOSN_LINUX_RELEASE_PATH:-"${ISTIO_MOSN_LINUX_RELEASE_DIR}/${ISTIO_MOSN_LINUX_RELEASE_NAME}"}
+  
+  # MOSN macOS vars. Normally set by the makefile.
+  # TODO Change url when official MOSN release for macOS is available
+  ISTIO_MOSN_MACOS_VERSION=${ISTIO_MOSN_MACOS_VERSION:-"${ISTIO_MOSN_VERSION}"}
+  ISTIO_MOSN_MACOS_RELEASE_URL=${ISTIO_MOSN_MACOS_RELEASE_URL:-https://github.com/mosn/mosn/releases/download/${ISTIO_MOSN_MACOS_VERSION}/mosn}
+  # Variables for the extracted debug/release MOSN artifacts.
+  ISTIO_MOSN_MACOS_RELEASE_DIR=${ISTIO_MOSN_MACOS_RELEASE_DIR:-"${OUT_DIR}//release"}
+  ISTIO_MOSN_MACOS_RELEASE_NAME=${ISTIO_MOSN_MACOS_RELEASE_NAME:-"mosn-${ISTIO_MOSN_MACOS_VERSION}"}
+  ISTIO_MOSN_MACOS_RELEASE_PATH=${ISTIO_MOSN_MACOS_RELEASE_PATH:-"${ISTIO_MOSN_MACOS_RELEASE_DIR}/${ISTIO_MOSN_MACOS_RELEASE_NAME}"}
+
+fi 
 
 mkdir -p "${ISTIO_OUT}"
 
 # Set the value of DOWNLOAD_COMMAND (either curl or wget)
 set_download_command
 
+# FIX ME
+download_envoy_if_necessary `eval echo '$ISTIO_'"${SIDECAR}"'_LINUX_DEBUG_URL'` `eval echo '$ISTIO_'"${SIDECAR}"'_LINUX_DEBUG_PATH'`
+
 if [[ -n "${DEBUG_IMAGE:-}" ]]; then
   # Download and extract the Envoy linux debug binary.
-  download_envoy_if_necessary "${ISTIO_ENVOY_LINUX_DEBUG_URL}" "$ISTIO_ENVOY_LINUX_DEBUG_PATH"
+  download_envoy_if_necessary `eval echo '$ISTIO_'"${SIDECAR}"'_LINUX_DEBUG_URL'` `eval echo '$ISTIO_'"${SIDECAR}"'_LINUX_DEBUG_PATH'`
 else
   echo "Skipping envoy debug. Set DEBUG_IMAGE to download."
 fi
 
 # Download and extract the Envoy linux release binary.
-download_envoy_if_necessary "${ISTIO_ENVOY_LINUX_RELEASE_URL}" "$ISTIO_ENVOY_LINUX_RELEASE_PATH"
+download_envoy_if_necessary `eval echo '$ISTIO_'"${SIDECAR}"'_LINUX_RELEASE_URL'` `eval echo '$ISTIO_'"${SIDECAR}"'_LINUX_RELEASE_PATH'`
 
 if [[ "$GOOS_LOCAL" == "darwin" ]]; then
   # Download and extract the Envoy macOS release binary
-  download_envoy_if_necessary "${ISTIO_ENVOY_MACOS_RELEASE_URL}" "$ISTIO_ENVOY_MACOS_RELEASE_PATH"
-  ISTIO_ENVOY_NATIVE_PATH=${ISTIO_ENVOY_MACOS_RELEASE_PATH}
+  download_envoy_if_necessary `eval echo '$ISTIO_'"${SIDECAR}"'_MACOS_RELEASE_URL'` `eval echo '$ISTIO_'"${SIDECAR}"'_MACOS_RELEASE_PATH'`
+  ISTIO_SIDECAR_NATIVE_PATH=`eval echo '$ISTIO_'"${SIDECAR}"'_MACOS_RELEASE_PATH'`
 else
-  ISTIO_ENVOY_NATIVE_PATH=${ISTIO_ENVOY_LINUX_RELEASE_PATH}
+  ISTIO_SIDECAR_NATIVE_PATH=`eval echo '$ISTIO_'"${SIDECAR}"'_LINUX_DEBUG_PATH'`
 fi
 
-# Donwload WebAssembly plugin files
-WASM_RELEASE_DIR=${ISTIO_ENVOY_LINUX_RELEASE_DIR}
-for plugin in stats metadata_exchange
-do
-  FILTER_WASM_URL="${ISTIO_ENVOY_BASE_URL}/${plugin}-${ISTIO_ENVOY_VERSION}.wasm"
-  download_wasm_if_necessary "${FILTER_WASM_URL}" "${WASM_RELEASE_DIR}"/"${plugin//_/-}"-filter.wasm
-done
+# TODO Support Wasm for MOSN
+if [ $SIDECAR = "Envoy" ] ; then
+  # Donwload WebAssembly plugin files
+  WASM_RELEASE_DIR=${ISTIO_ENVOY_LINUX_RELEASE_DIR}
+  for plugin in stats metadata_exchange
+  do
+    FILTER_WASM_URL="${ISTIO_ENVOY_BASE_URL}/${plugin}-${ISTIO_ENVOY_VERSION}.wasm"
+    download_wasm_if_necessary "${FILTER_WASM_URL}" "${WASM_RELEASE_DIR}"/"${plugin//_/-}"-filter.wasm
+  done
 
-# Copy native envoy binary to ISTIO_OUT
-echo "Copying ${ISTIO_ENVOY_NATIVE_PATH} to ${ISTIO_OUT}/envoy"
-cp -f "${ISTIO_ENVOY_NATIVE_PATH}" "${ISTIO_OUT}/envoy"
+  # Copy the envoy binary to ISTIO_OUT_LINUX if the local OS is not Linux
+  if [[ "$GOOS_LOCAL" != "linux" ]]; then
+     echo "Copying ${ISTIO_ENVOY_LINUX_RELEASE_PATH} to ${ISTIO_OUT_LINUX}/envoy"
+     cp -f "${ISTIO_ENVOY_LINUX_RELEASE_PATH}" "${ISTIO_OUT_LINUX}/envoy"
+  fi
 
-# Copy the envoy binary to ISTIO_OUT_LINUX if the local OS is not Linux
-if [[ "$GOOS_LOCAL" != "linux" ]]; then
-   echo "Copying ${ISTIO_ENVOY_LINUX_RELEASE_PATH} to ${ISTIO_OUT_LINUX}/envoy"
-  cp -f "${ISTIO_ENVOY_LINUX_RELEASE_PATH}" "${ISTIO_OUT_LINUX}/envoy"
+  # Copy native envoy binary to ISTIO_OUT
+  echo "Copying ${ISTIO_SIDECAR_NATIVE_PATH} to ${ISTIO_OUT}/envoy"
+  cp -f "${ISTIO_SIDECAR_NATIVE_PATH}" "${ISTIO_OUT}/envoy"
 fi
+
+if [ $SIDECAR = "MOSN" ] ; then
+  # Copy the envoy binary to ISTIO_OUT_LINUX if the local OS is not Linux
+  if [[ "$GOOS_LOCAL" != "linux" ]]; then
+     echo "Copying ${ISTIO_MOSN_LINUX_RELEASE_PATH} to ${ISTIO_OUT_LINUX}/mosn"
+     cp -f "${ISTIO_MOSN_LINUX_RELEASE_PATH}" "${ISTIO_OUT_LINUX}/mosn"
+  fi
+  
+  # Copy native mosn binary to ISTIO_OUT
+  echo "Copying ${ISTIO_SIDECAR_NATIVE_PATH} to ${ISTIO_OUT}/mosn"
+  cp -f "${ISTIO_SIDECAR_NATIVE_PATH}" "${ISTIO_OUT}/mosn"
+fi
+

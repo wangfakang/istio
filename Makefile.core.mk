@@ -131,51 +131,88 @@ ifeq ($(PROXY_REPO_SHA),)
   export PROXY_REPO_SHA:=$(shell grep PROXY_REPO_SHA istio.deps  -A 4 | grep lastStableSHA | cut -f 4 -d '"')
 endif
 
-# Envoy binary variables Keep the default URLs up-to-date with the latest push from istio/proxy.
-
-export ISTIO_ENVOY_BASE_URL ?= https://storage.googleapis.com/istio-build/proxy
-
-# OS-neutral vars. These currently only work for linux.
-export ISTIO_ENVOY_VERSION ?= ${PROXY_REPO_SHA}
-export ISTIO_ENVOY_DEBUG_URL ?= $(ISTIO_ENVOY_BASE_URL)/envoy-debug-$(ISTIO_ENVOY_VERSION).tar.gz
-export ISTIO_ENVOY_RELEASE_URL ?= $(ISTIO_ENVOY_BASE_URL)/envoy-alpha-$(ISTIO_ENVOY_VERSION).tar.gz
-
-# Envoy Linux vars.
-export ISTIO_ENVOY_LINUX_VERSION ?= ${ISTIO_ENVOY_VERSION}
-export ISTIO_ENVOY_LINUX_DEBUG_URL ?= ${ISTIO_ENVOY_DEBUG_URL}
-export ISTIO_ENVOY_LINUX_RELEASE_URL ?= ${ISTIO_ENVOY_RELEASE_URL}
-# Variables for the extracted debug/release Envoy artifacts.
-export ISTIO_ENVOY_LINUX_DEBUG_DIR ?= ${TARGET_OUT_LINUX}/debug
-export ISTIO_ENVOY_LINUX_DEBUG_NAME ?= envoy-debug-${ISTIO_ENVOY_LINUX_VERSION}
-export ISTIO_ENVOY_LINUX_DEBUG_PATH ?= ${ISTIO_ENVOY_LINUX_DEBUG_DIR}/${ISTIO_ENVOY_LINUX_DEBUG_NAME}
-export ISTIO_ENVOY_LINUX_RELEASE_DIR ?= ${TARGET_OUT_LINUX}/release
-export ISTIO_ENVOY_LINUX_RELEASE_NAME ?= envoy-${ISTIO_ENVOY_VERSION}
-export ISTIO_ENVOY_LINUX_RELEASE_PATH ?= ${ISTIO_ENVOY_LINUX_RELEASE_DIR}/${ISTIO_ENVOY_LINUX_RELEASE_NAME}
-
-# Envoy macOS vars.
-# TODO Change url when official envoy release for macOS is available
-export ISTIO_ENVOY_MACOS_VERSION ?= 1.0.2
-export ISTIO_ENVOY_MACOS_RELEASE_URL ?= https://github.com/istio/proxy/releases/download/${ISTIO_ENVOY_MACOS_VERSION}/istio-proxy-${ISTIO_ENVOY_MACOS_VERSION}-macos.tar.gz
-# Variables for the extracted debug/release Envoy artifacts.
-export ISTIO_ENVOY_MACOS_RELEASE_DIR ?= ${TARGET_OUT}/release
-export ISTIO_ENVOY_MACOS_RELEASE_NAME ?= envoy-${ISTIO_ENVOY_MACOS_VERSION}
-export ISTIO_ENVOY_MACOS_RELEASE_PATH ?= ${ISTIO_ENVOY_MACOS_RELEASE_DIR}/${ISTIO_ENVOY_MACOS_RELEASE_NAME}
-
-# Allow user-override for a local Envoy build.
-export USE_LOCAL_PROXY ?= 0
-ifeq ($(USE_LOCAL_PROXY),1)
-  export ISTIO_ENVOY_LOCAL ?= $(realpath ${ISTIO_GO}/../proxy/bazel-bin/src/envoy/envoy)
-  # Point the native paths to the local envoy build.
-  ifeq ($(GOOS_LOCAL), Darwin)
-    export ISTIO_ENVOY_MACOS_RELEASE_DIR = $(dir ${ISTIO_ENVOY_LOCAL})
-    export ISTIO_ENVOY_MACOS_RELEASE_PATH = ${ISTIO_ENVOY_LOCAL}
-  else
-    export ISTIO_ENVOY_LINUX_DEBUG_DIR = $(dir ${ISTIO_ENVOY_LOCAL})
-    export ISTIO_ENVOY_LINUX_RELEASE_DIR = $(dir ${ISTIO_ENVOY_LOCAL})
-    export ISTIO_ENVOY_LINUX_DEBUG_PATH = ${ISTIO_ENVOY_LOCAL}
-    export ISTIO_ENVOY_LINUX_RELEASE_PATH = ${ISTIO_ENVOY_LOCAL}
+ifeq ($(SIDECAR), Envoy)
+  # Envoy binary variables Keep the default URLs up-to-date with the latest push from istio/proxy.
+  
+  export ISTIO_ENVOY_BASE_URL ?= https://storage.googleapis.com/istio-build/proxy
+  
+  # OS-neutral vars. These currently only work for linux.
+  export ISTIO_ENVOY_VERSION ?= ${PROXY_REPO_SHA}
+  export ISTIO_ENVOY_DEBUG_URL ?= $(ISTIO_ENVOY_BASE_URL)/envoy-debug-$(ISTIO_ENVOY_VERSION).tar.gz
+  export ISTIO_ENVOY_RELEASE_URL ?= $(ISTIO_ENVOY_BASE_URL)/envoy-alpha-$(ISTIO_ENVOY_VERSION).tar.gz
+  
+  # Envoy Linux vars.
+  export ISTIO_ENVOY_LINUX_VERSION ?= ${ISTIO_ENVOY_VERSION}
+  export ISTIO_ENVOY_LINUX_DEBUG_URL ?= ${ISTIO_ENVOY_DEBUG_URL}
+  export ISTIO_ENVOY_LINUX_RELEASE_URL ?= ${ISTIO_ENVOY_RELEASE_URL}
+  # Variables for the extracted debug/release Envoy artifacts.
+  export ISTIO_ENVOY_LINUX_DEBUG_DIR ?= ${OUT_DIR}/linux_amd64/debug
+  export ISTIO_ENVOY_LINUX_DEBUG_NAME ?= envoy-debug-${ISTIO_ENVOY_LINUX_VERSION}
+  export ISTIO_ENVOY_LINUX_DEBUG_PATH ?= ${ISTIO_ENVOY_LINUX_DEBUG_DIR}/${ISTIO_ENVOY_LINUX_DEBUG_NAME}
+  export ISTIO_ENVOY_LINUX_RELEASE_DIR ?= ${OUT_DIR}/linux_amd64/release
+  export ISTIO_ENVOY_LINUX_RELEASE_NAME ?= envoy-${ISTIO_ENVOY_VERSION}
+  export ISTIO_ENVOY_LINUX_RELEASE_PATH ?= ${ISTIO_ENVOY_LINUX_RELEASE_DIR}/${ISTIO_ENVOY_LINUX_RELEASE_NAME}
+  
+  # Envoy macOS vars.
+  # TODO Change url when official envoy release for macOS is available
+  export ISTIO_ENVOY_MACOS_VERSION ?= 1.0.2
+  export ISTIO_ENVOY_MACOS_RELEASE_URL ?= https://github.com/istio/proxy/releases/download/${ISTIO_ENVOY_MACOS_VERSION}/istio-proxy-${ISTIO_ENVOY_MACOS_VERSION}-macos.tar.gz
+  # Variables for the extracted debug/release Envoy artifacts.
+  export ISTIO_ENVOY_MACOS_RELEASE_DIR ?= ${OUT_DIR}/darwin_amd64/release
+  export ISTIO_ENVOY_MACOS_RELEASE_NAME ?= envoy-${ISTIO_ENVOY_MACOS_VERSION}
+  export ISTIO_ENVOY_MACOS_RELEASE_PATH ?= ${ISTIO_ENVOY_MACOS_RELEASE_DIR}/${ISTIO_ENVOY_MACOS_RELEASE_NAME}
+  
+  # Allow user-override for a local Envoy build.
+  export USE_LOCAL_PROXY ?= 0
+  ifeq ($(USE_LOCAL_PROXY),1)
+    export ISTIO_ENVOY_LOCAL ?= $(realpath ${ISTIO_GO}/../proxy/bazel-bin/src/envoy/envoy)
+    # Point the native paths to the local envoy build.
+    ifeq ($(GOOS_LOCAL), Darwin)
+      export ISTIO_ENVOY_MACOS_RELEASE_DIR = $(dir ${ISTIO_ENVOY_LOCAL})
+      export ISTIO_ENVOY_MACOS_RELEASE_PATH = ${ISTIO_ENVOY_LOCAL}
+    else
+      export ISTIO_ENVOY_LINUX_DEBUG_DIR = $(dir ${ISTIO_ENVOY_LOCAL})
+      export ISTIO_ENVOY_LINUX_RELEASE_DIR = $(dir ${ISTIO_ENVOY_LOCAL})
+      export ISTIO_ENVOY_LINUX_DEBUG_PATH = ${ISTIO_ENVOY_LOCAL}
+      export ISTIO_ENVOY_LINUX_RELEASE_PATH = ${ISTIO_ENVOY_LOCAL}
+    endif
   endif
 endif
+
+
+
+ifeq ($(SIDECAR), MOSN)
+  # Defines the base URL to download mosn from
+  export ISTIO_MOSN_BASE_URL ?= https://github.com/mosn/mosn/releases/download/
+
+  # These variables are normally set by the Makefile.
+  # OS-neutral vars. These currently only work for linux.
+  export ISTIO_MOSN_VERSION ?= ${PROXY_REPO_SHA}
+  export ISTIO_MOSN_DEBUG_URL ?= $(ISTIO_MOSN_BASE_URL)/$(ISTIO_MOSN_VERSION)/mosn
+  export ISTIO_MOSN_RELEASE_URL ?= $(ISTIO_MOSN_BASE_URL)/$(ISTIO_MOSN_VERSION)/mosn
+
+  # MOSN Linux vars. Normally set by the Makefile.
+  export ISTIO_MOSN_LINUX_VERSION ?= ${ISTIO_MOSN_VERSION}
+  export ISTIO_MOSN_LINUX_DEBUG_URL ?= ${ISTIO_MOSN_DEBUG_URL}
+  export ISTIO_MOSN_LINUX_RELEASE_URL ?= ${ISTIO_MOSN_RELEASE_URL}
+  # Variables for the extracted debug/release MOSN artifacts.
+  export ISTIO_MOSN_LINUX_DEBUG_DIR ?= ${OUT_DIR}/linux_amd64/debug
+  export ISTIO_MOSN_LINUX_DEBUG_NAME ?= mosn-debug-${ISTIO_MOSN_LINUX_VERSION}
+  export ISTIO_MOSN_LINUX_DEBUG_PATH ?= $(ISTIO_MOSN_LINUX_DEBUG_DIR)/$(ISTIO_MOSN_LINUX_DEBUG_NAME)
+  export ISTIO_MOSN_LINUX_RELEASE_DIR ?= ${OUT_DIR}/linux_amd64/release
+  export ISTIO_MOSN_LINUX_RELEASE_NAME ?= mosn-${ISTIO_MOSN_LINUX_VERSION}
+  export ISTIO_MOSN_LINUX_RELEASE_PATH ?= $(ISTIO_MOSN_LINUX_RELEASE_DIR)/$(ISTIO_MOSN_LINUX_RELEASE_NAME)
+
+  # MOSN macOS vars. Normally set by the makefile.
+  # TODO Change url when official MOSN release for macOS is available
+  export ISTIO_MOSN_MACOS_VERSION = 0.9.0
+  export ISTIO_MOSN_MACOS_RELEASE_URL ?= https://github.com/mosn/mosn/releases/download/${ISTIO_MOSN_MACOS_VERSION}/mosn
+  # Variables for the extracted debug/release MOSN artifacts.
+  export ISTIO_MOSN_MACOS_RELEASE_DIR ?= ${OUT_DIR}/release
+  export ISTIO_MOSN_MACOS_RELEASE_NAME ?= mosn-${ISTIO_MOSN_MACOS_VERSION}
+  export ISTIO_MOSN_MACOS_RELEASE_PATH ?= $(ISTIO_MOSN_MACOS_RELEASE_DIR)/$(ISTIO_MOSN_MACOS_RELEASE_NAME)
+endif 
+
 
 GO_VERSION_REQUIRED:=1.10
 
@@ -655,3 +692,5 @@ include tests/istio.mk
 include tests/integration/tests.mk
 
 include common/Makefile.common.mk
+
+
