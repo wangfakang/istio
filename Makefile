@@ -22,6 +22,12 @@
 # allow optional per-repo overrides
 -include Makefile.overrides.mk
 
+
+# Dynamic set sidecar
+# Now it support Envoy and MOSN, if set SIDECAR = MOSN, MOSN will be used as the proxy in Istio.
+export SIDECAR = MOSN
+export ISTIO_MOSN_VERSION = 0.9.0
+
 # Set the environment variable BUILD_WITH_CONTAINER to use a container
 # to build the repo. The only dependencies in this mode are to have make and
 # docker. If you'd rather build with a local tool chain instead, you'll need to

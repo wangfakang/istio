@@ -84,33 +84,46 @@ docker.sidecar_injector:$(ISTIO_DOCKER)/sidecar-injector
 # BUILD_PRE tells $(DOCKER_RULE) to run the command specified before executing a docker build
 # BUILD_ARGS tells  $(DOCKER_RULE) to execute a docker build with the specified commands
 
-# The file must be named 'envoy', depends on the release.
-${ISTIO_ENVOY_LINUX_RELEASE_DIR}/envoy: ${ISTIO_ENVOY_LINUX_RELEASE_PATH}
+
+#TODO support set sidecar dynamicly
+# The file must be named '$SIDECAR_BINARY_NAME', depends on the release.
+
+ifeq ($(SIDECAR), MOSN)
+    export SIDECAR_BINARY_NAME = mosn
+endif
+
+ifeq ($(SIDECAR), Envoy)
+    export SIDECAR_BINARY_NAME = envoy
+endif
+
+
+${ISTIO_MOSN_LINUX_RELEASE_DIR}/${SIDECAR_BINARY_NAME}: ${ISTIO_MOSN_LINUX_RELEASE_PATH}
 	mkdir -p $(DOCKER_BUILD_TOP)/proxyv2
 ifdef DEBUG_IMAGE
-	cp ${ISTIO_ENVOY_LINUX_DEBUG_PATH} ${ISTIO_ENVOY_LINUX_RELEASE_DIR}/envoy
+	cp ${ISTIO_MOSN_LINUX_DEBUG_PATH} ${ISTIO_MOSN_LINUX_RELEASE_DIR}/${SIDECAR_BINARY_NAME}
 else
-	cp ${ISTIO_ENVOY_LINUX_RELEASE_PATH} ${ISTIO_ENVOY_LINUX_RELEASE_DIR}/envoy
+	cp ${ISTIO_MOSN_LINUX_RELEASE_PATH} ${ISTIO_MOSN_LINUX_RELEASE_DIR}/${SIDECAR_BINARY_NAME}
 endif
+
 
 # rule for wasm extensions.
 $(ISTIO_ENVOY_LINUX_RELEASE_DIR)/stats-filter.wasm: init
 $(ISTIO_ENVOY_LINUX_RELEASE_DIR)/metadata-exchange-filter.wasm: init
 
 # Default proxy image.
-docker.proxyv2: BUILD_PRE=&& chmod 755 envoy pilot-agent istio-iptables
+docker.proxyv2: BUILD_PRE=&& chmod 755  ${SIDECAR_BINARY_NAME} pilot-agent istio-iptables
 docker.proxyv2: BUILD_ARGS=--build-arg proxy_version=istio-proxy:${PROXY_REPO_SHA} --build-arg istio_version=${VERSION} --build-arg BASE_VERSION=${BASE_VERSION}
 docker.proxyv2: tools/packaging/common/envoy_bootstrap_v2.json
 docker.proxyv2: install/gcp/bootstrap/gcp_envoy_bootstrap.json
-docker.proxyv2: $(ISTIO_ENVOY_LINUX_RELEASE_DIR)/envoy
+docker.proxyv2: $(ISTIO_MOSN_LINUX_RELEASE_DIR)/${SIDECAR_BINARY_NAME}
 docker.proxyv2: $(ISTIO_OUT_LINUX)/pilot-agent
 docker.proxyv2: pilot/docker/Dockerfile.proxyv2
 docker.proxyv2: pilot/docker/envoy_pilot.yaml.tmpl
 docker.proxyv2: pilot/docker/envoy_policy.yaml.tmpl
 docker.proxyv2: pilot/docker/envoy_telemetry.yaml.tmpl
 docker.proxyv2: $(ISTIO_DOCKER)/istio-iptables
-docker.proxyv2: $(ISTIO_ENVOY_LINUX_RELEASE_DIR)/stats-filter.wasm
-docker.proxyv2: $(ISTIO_ENVOY_LINUX_RELEASE_DIR)/metadata-exchange-filter.wasm
+#docker.proxyv2: $(ISTIO_MOSN_LINUX_RELEASE_DIR)/stats-filter.wasm
+#docker.proxyv2: $(ISTIO_MOSN_LINUX_RELEASE_DIR)/metadata-exchange-filter.wasm
 	$(DOCKER_RULE)
 
 # Proxy using TPROXY interception - but no core dumps
@@ -343,3 +356,5 @@ dockerx.pushx: dockerx
 # Scan images for security vulnerabilities using the ImageScanner tool
 docker.scan_images: $(DOCKER_PUSH_TARGETS)
 	$(foreach TGT,$(DOCKER_TARGETS),$(call run_vulnerability_scanning,$(subst docker.,,$(TGT)),$(HUB)/$(subst docker.,,$(TGT)):$(TAG)))
+
+

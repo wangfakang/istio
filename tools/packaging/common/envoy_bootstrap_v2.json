@@ -182,21 +182,27 @@
           {
           "prefix": "component"
           },
-          {{- range $a, $s := .inclusionPrefix }}
           {
-          "prefix": "{{$s}}"
+          "prefix": "cluster_manager"
           },
-          {{- end }}
-          {{- range $a, $s := .inclusionSuffix }}
           {
-          "suffix": "{{$s}}"
+          "prefix": "listener_manager"
           },
-          {{- end }}
-          {{- range $a, $s := .inclusionRegexps }}
           {
-          "regex": "{{js $s}}"
+          "prefix": "http_mixer_filter"
           },
-          {{- end }}
+          {
+          "prefix": "tcp_mixer_filter"
+          },
+          {
+          "prefix": "server"
+          },
+          {
+          "prefix": "cluster.xds-grpc"
+          },
+          {
+          "suffix": "ssl_context_update_by_sds"
+          }
         ]
       }
     }
