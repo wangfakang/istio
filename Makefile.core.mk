@@ -183,7 +183,8 @@ endif
 
 ifeq ($(SIDECAR), MOSN)
   # Defines the base URL to download mosn from
-  export ISTIO_MOSN_BASE_URL ?= https://github.com/mosn/mosn/releases/download/
+  #export ISTIO_MOSN_BASE_URL ?= https://github.com/mosn/mosn/releases/download/
+  export ISTIO_MOSN_BASE_URL ?= https://github.com/wangfakang/mosn.bin/releases/download/
 
   # These variables are normally set by the Makefile.
   # OS-neutral vars. These currently only work for linux.
