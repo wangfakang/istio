@@ -384,7 +384,7 @@
               }
             }
             {{ end }}
-          },
+          }
         },
         {{ else }}
         "tls_context": {
