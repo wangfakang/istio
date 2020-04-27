@@ -80,7 +80,7 @@ security/cmd/node_agent/na/pkey
 tools/istioctl.bash
 vendor
 # Contains the built artifacts
-out/
-etc/
+#out/
+#etc/
 var/
 .idea/
