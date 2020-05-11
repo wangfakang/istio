@@ -99,13 +99,13 @@ function download_mosn_if_necessary () {
 
     # Download and extract the binary to the output directory.
     echo "Downloading MOSN: ${DOWNLOAD_COMMAND} $1 to $2"
-    time ${DOWNLOAD_COMMAND} --header "${AUTH_HEADER:-}" "$1" > mosn
+    time ${DOWNLOAD_COMMAND} --header "${AUTH_HEADER:-}" "$1" > mosng
 
     # Copy the extracted binary to the output location
-    cp mosn "$2"
+    cp mosng "$2"
 
     # Remove the extracted binary.
-    rm -rf mosn
+    rm -rf mosng
 
     # Make a copy named just "envoy" in the same directory (overwrite if necessary).
     echo "Copying $2 to $(dirname "$2")/mosn"

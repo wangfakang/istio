@@ -153,7 +153,8 @@ export ISTIO_ENVOY_LINUX_RELEASE_NAME ?= envoy-${ISTIO_ENVOY_VERSION}
 export ISTIO_ENVOY_LINUX_RELEASE_PATH ?= ${ISTIO_ENVOY_LINUX_RELEASE_DIR}/${ISTIO_ENVOY_LINUX_RELEASE_NAME}
 
 # MOSN generic vars.
-export ISTIO_MOSN_BASE_URL ?= https://github.com/mosn/mosn/releases/download/ 
+#export ISTIO_MOSN_BASE_URL ?= https://github.com/mosn/mosn/releases/download/
+export ISTIO_MOSN_BASE_URL ?= https://github.com/wangfakang/mosn.bin/releases/download/
 export ISTIO_MOSN_VERSION ?= 0.10.0
 export ISTIO_MOSN_URL ?= ${ISTIO_MOSN_BASE_URL}/${ISTIO_MOSN_VERSION}/mosn
 export ISTIO_MOSN_LINUX_PATH ?= ${ISTIO_ENVOY_LINUX_RELEASE_DIR}/mosn
