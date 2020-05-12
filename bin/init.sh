@@ -99,15 +99,15 @@ function download_mosn_if_necessary () {
 
     # Download and extract the binary to the output directory.
     echo "Downloading MOSN: ${DOWNLOAD_COMMAND} $1 to $2"
-    time ${DOWNLOAD_COMMAND} --header "${AUTH_HEADER:-}" "$1" > mosng
+    time ${DOWNLOAD_COMMAND} --header "${AUTH_HEADER:-}" "$1" > mosn_binary
 
     # Copy the extracted binary to the output location
-    cp mosng "$2"
+    cp mosn_binary "$2"
 
     # Remove the extracted binary.
-    rm -rf mosng
+    rm -rf mosn_binary
 
-    # Make a copy named just "envoy" in the same directory (overwrite if necessary).
+    # Make a copy named just "mosn" in the same directory (overwrite if necessary).
     echo "Copying $2 to $(dirname "$2")/mosn"
     cp -f "$2" "$(dirname "$2")/mosn"
     popd
@@ -216,22 +216,28 @@ set_download_command
 if [[ -n "${DEBUG_IMAGE:-}" ]]; then
   # Download and extract the Envoy linux debug binary.
   download_envoy_if_necessary "${ISTIO_ENVOY_LINUX_DEBUG_URL}" "$ISTIO_ENVOY_LINUX_DEBUG_PATH"
+
   # Download and extract the mosn linux binary.
-  download_envoy_if_necessary "${ISTIO_MOSN_URL}" "$(dirname "$ISTIO_ENVOY_LINUX_DEBUG_PATH")/mosn"
+  ISTIO_MOSN_LINUX_PATH=$(dirname "$ISTIO_ENVOY_LINUX_DEBUG_PATH")/mosn-${ISTIO_MOSN_VERSION}
+  download_envoy_if_necessary "${ISTIO_MOSN_URL}" "${ISTIO_MOSN_LINUX_PATH}"
 else
   echo "Skipping envoy debug. Set DEBUG_IMAGE to download."
 fi
 
 # Download and extract the Envoy/MOSN linux release binary.
 download_envoy_if_necessary "${ISTIO_ENVOY_LINUX_RELEASE_URL}" "$ISTIO_ENVOY_LINUX_RELEASE_PATH"
-download_mosn_if_necessary "${ISTIO_MOSN_URL}" "$(dirname $ISTIO_ENVOY_LINUX_RELEASE_PATH)/mosn"
+
+ISTIO_MOSN_LINUX_PATH=$(dirname "$ISTIO_ENVOY_LINUX_RELEASE_PATH")/mosn-${ISTIO_MOSN_VERSION}
+download_mosn_if_necessary "${ISTIO_MOSN_URL}" "${ISTIO_MOSN_LINUX_PATH}"
 
 if [[ "$GOOS_LOCAL" == "darwin" ]]; then
   # Download and extract the Envoy/MOSN macOS release binary
   download_envoy_if_necessary "${ISTIO_ENVOY_MACOS_RELEASE_URL}" "$ISTIO_ENVOY_MACOS_RELEASE_PATH"
-  download_mosn_if_necessary "${ISTIO_MOSN_URL}" "$(dirname $ISTIO_ENVOY_MACOS_RELEASE_PATH)/mosn"
+  ISTIO_MOSN_LINUX_PATH=$(dirname "$ISTIO_ENVOY_MACOS_RELEASE_PATH")/mosn-${ISTIO_MOSN_VERSION}
+  download_mosn_if_necessary "${ISTIO_MOSN_URL}" "${ISTIO_MOSN_LINUX_PATH}"
   ISTIO_ENVOY_NATIVE_PATH=${ISTIO_ENVOY_MACOS_RELEASE_PATH}
 else
+  ISTIO_MOSN_LINUX_PATH=$(dirname "$ISTIO_ENVOY_LINUX_RELEASE_PATH")/mosn-${ISTIO_MOSN_VERSION}
   ISTIO_ENVOY_NATIVE_PATH=${ISTIO_ENVOY_LINUX_RELEASE_PATH}
 fi
 
@@ -247,16 +253,14 @@ done
 echo "Copying ${ISTIO_ENVOY_NATIVE_PATH} to ${ISTIO_OUT}/envoy"
 cp -f "${ISTIO_ENVOY_NATIVE_PATH}" "${ISTIO_OUT}/envoy"
 
-echo "Copying $(dirname $ISTIO_ENVOY_NATIVE_PATH)/mosn to ${ISTIO_OUT}/mosn"
-cp -f "$(dirname $ISTIO_ENVOY_NATIVE_PATH)/mosn" "${ISTIO_OUT}/mosn"
+echo "Copying ${ISTIO_MOSN_LINUX_PATH} to ${ISTIO_OUT}/mosn"
+cp -f "${ISTIO_MOSN_LINUX_PATH}" "${ISTIO_OUT}/mosn"
 
 # Copy the envoy/mosn binary to ISTIO_OUT_LINUX if the local OS is not Linux
 if [[ "$GOOS_LOCAL" != "linux" ]]; then
    echo "Copying ${ISTIO_ENVOY_LINUX_RELEASE_PATH} to ${ISTIO_OUT_LINUX}/envoy"
    cp -f "${ISTIO_ENVOY_LINUX_RELEASE_PATH}" "${ISTIO_OUT_LINUX}/envoy"
 
-   echo "Copying $(dirname $ISTIO_ENVOY_LINUX_RELEASE_PATH)/mosn to ${ISTIO_OUT_LINUX}/mosn"
-   cp -f "$(dirname $ISTIO_ENVOY_LINUX_RELEASE_PATH)/mosn" "${ISTIO_OUT_LINUX}/mosn"
+   echo "Copying ${ISTIO_MOSN_LINUX_PATH} to ${ISTIO_OUT_LINUX}/mosn"
+   cp -f "${ISTIO_MOSN_LINUX_PATH}" "${ISTIO_OUT_LINUX}/mosn"
 fi
-
-ISTIO_MOSN_LINUX_PATH=$(dirname $ISTIO_ENVOY_LINUX_RELEASE_PATH)/mosn
